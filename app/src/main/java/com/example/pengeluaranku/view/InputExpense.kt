@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pengeluaranku.ui.theme.PengeluarankuTheme
+import com.example.pengeluaranku.view.component.CustomDialog
 import com.example.pengeluaranku.view.component.DropdownInput
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -56,22 +57,13 @@ fun InputExpense() {
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF758BFD))
-            .padding(start = 25.dp,end = 25.dp, top = 90.dp, bottom = 25.dp)
+            .padding(start = 25.dp, end = 25.dp, top = 90.dp, bottom = 25.dp)
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.TopEnd
         ) {
-            Button(
-                onClick = { }, modifier = Modifier
-                    .clip(RoundedCornerShape(25.dp))
-                    .size(125.dp, 35.dp),
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color.White,
-                )
-            ) {
-                Text(text = "Use Receipt", color = Color(0xFF758BFD))
-            }
+            ButtonUseReceipt()
         }
         NominalInput("Expense", Color.White)
         DropdownInput()
@@ -82,8 +74,33 @@ fun InputExpense() {
 }
 
 @Composable
+fun ButtonUseReceipt() {
+    val context = LocalContext.current
+    var showCustomDialog by remember {
+        mutableStateOf(false)
+    }
+    Button(
+        onClick = { showCustomDialog = !showCustomDialog },
+        modifier = Modifier
+            .clip(RoundedCornerShape(25.dp))
+            .size(125.dp, 35.dp),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = Color.White,
+        )
+    ) {
+        Text(text = "Use Receipt", color = Color(0xFF758BFD))
+    }
+
+    if (showCustomDialog) {
+        CustomDialog {
+            showCustomDialog = !showCustomDialog
+        }
+    }
+}
+
+@Composable
 fun NominalInput(textTitle: String, textColor: Color) {
-    Column() {
+    Column {
         Text(
             text = "$textTitle :",
             fontSize = 22.sp,
@@ -190,7 +207,7 @@ fun InputNotes(bgColor: Color, textColor: Color) {
 
     var text by remember { mutableStateOf("") }
 
-    Column() {
+    Column {
         Text(
             text = "Notes :",
             fontSize = 20.sp,
@@ -219,8 +236,10 @@ fun InputNotes(bgColor: Color, textColor: Color) {
 
 @Composable
 fun ButtonSubmit(bgColor: Color, textColor: Color) {
-    Box(modifier = Modifier
-        .fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize(), contentAlignment = Alignment.Center
+    ) {
         Button(
             onClick = { }, modifier = Modifier
                 .clip(RoundedCornerShape(40.dp))
