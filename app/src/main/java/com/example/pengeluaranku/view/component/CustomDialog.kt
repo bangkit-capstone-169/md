@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,9 +27,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,6 +45,85 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
+
+
+@Composable
+fun LoadingDialog(onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = { onDismiss }, properties = DialogProperties(
+            dismissOnBackPress = false, dismissOnClickOutside = false
+        )
+    ) {
+        Card(
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier,
+        ) {
+            Column(
+                Modifier
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "Uploading Data...",
+                    Modifier
+                        .padding(8.dp), textAlign = TextAlign.Center
+                )
+
+                CircularProgressIndicator(
+                    strokeWidth = 4.dp,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ResultDialog(onDismiss: () -> Unit, resultString: String) {
+    Dialog(
+        onDismissRequest = { onDismiss }, properties = DialogProperties(
+            dismissOnBackPress = false, dismissOnClickOutside = false
+        )
+    ) {
+        Card(
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier,
+        ) {
+            Column(
+                Modifier
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "Send data $resultString...",
+                    Modifier
+                        .padding(8.dp),
+                    textAlign = TextAlign.Center,
+                    fontSize = 20.sp,
+                    letterSpacing = 2.sp
+                )
+
+                Button(
+                    onClick = {
+                        onDismiss()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(8.dp)
+                        .width(100.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF758BFD),
+                        contentColor = Color.White
+                    ),
+                ) {
+                    Text(text = "Okay", letterSpacing = 1.sp)
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun CustomDialog(onDismiss: () -> Unit) {
@@ -73,12 +156,16 @@ fun CustomDialog(onDismiss: () -> Unit) {
         }
     }
 
+    //ShowDialog
+    var showDialog by remember { mutableStateOf(false) }
+
     //Photo Picker
     var photoPickerUri: Uri? by remember { mutableStateOf(null) }
 
     val launcherPhotoPicker =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             photoPickerUri = uri
+            showDialog = true
         }
     Dialog(
         onDismissRequest = { onDismiss() }, properties = DialogProperties(
@@ -147,23 +234,29 @@ fun CustomDialog(onDismiss: () -> Unit) {
                         Text(text = "Camera", letterSpacing = 1.sp)
                     }
                 }
-                    Button(
-                        onClick = {
-                            onDismiss()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFEF5A75),
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        Text(text = "Back", letterSpacing = 1.sp)
-                    }
+                Button(
+                    onClick = {
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFEF5A75),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Text(text = "Back", letterSpacing = 1.sp)
+                }
             }
         }
     }
+
+    if (showDialog) {
+        ResultDialog(onDismiss = { showDialog = false }, resultString = "Success")
+//    LoadingDialog {}
+    }
+
 }
 
 @SuppressLint("SimpleDateFormat")
@@ -181,14 +274,21 @@ fun Context.createImageFile(): File {
 @Composable
 fun CustomDialogPrev() {
     PengeluarankuTheme {
-        var showCustomDialog by remember {
-            mutableStateOf(true)
+//        var showCustomDialog by remember {
+//            mutableStateOf(true)
+//        }
+//
+//        if (showCustomDialog) {
+//            CustomDialog {
+//                showCustomDialog = !showCustomDialog
+//            }
+//        }
+
+//        ResultDialog(onDismiss = { }, resultString = "Success")
+
+        LoadingDialog {
+
         }
 
-        if (showCustomDialog) {
-            CustomDialog {
-                showCustomDialog = !showCustomDialog
-            }
-        }
     }
 }
