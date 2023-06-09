@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -26,27 +27,41 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.pengeluaranku.R
+import com.example.pengeluaranku.database.Expense
+import com.example.pengeluaranku.database.Income
 import com.example.pengeluaranku.ui.theme.PengeluarankuTheme
 import com.example.pengeluaranku.view.component.Tabs
+import com.example.pengeluaranku.viewModel.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalPagerApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Dashboard() {
+fun Dashboard(navController: NavController,expenseList: List<Expense>,incomeList: List<Income>, viewModel: MainViewModel) {
+
+    val allExpense : Int = expenseList.sumOf { it.expense }
+    val allIncome : Int = incomeList.sumOf { it.income }
+
+    val currencyFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+    currencyFormat.maximumFractionDigits = 0
+
+
 
     val pagerState = rememberPagerState(pageCount = 2)
 
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        ExpenseInfo(expense = "3.000.000", income = "6.000.000", fontColor = Color.White)
+        ExpenseInfo(expense = "${currencyFormat.format(allExpense)}", income = "${currencyFormat.format(allIncome)}", fontColor = Color.White)
         Tabs(pagerState = pagerState)
-        TabsContent(pagerState = pagerState)
+        TabsContent(navController = navController,pagerState = pagerState, expenseList = expenseList, incomeList = incomeList, viewModel = viewModel)
     }
 }
 
@@ -103,17 +118,21 @@ fun ExpenseInfo(expense: String, income: String, fontColor: Color) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun TabsContent(pagerState: PagerState) {
+fun TabsContent(navController: NavController,pagerState: PagerState, expenseList:List<Expense>, incomeList: List<Income>, viewModel: MainViewModel) {
+    val currentMonth =
+        LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM")).toString()
+
     HorizontalPager(state = pagerState) { page ->
         when (page) {
-            0 -> Box() {
-                com.example.pengeluaranku.view.component.List()
+            0 -> Box(modifier = Modifier.fillMaxSize()) {
+                com.example.pengeluaranku.view.component.List(navController = navController,expenseList, selectedMonth = currentMonth, viewModel = viewModel)
             }
 
-            1 -> Box {
-                com.example.pengeluaranku.view.component.List()
+            1 -> Box(modifier = Modifier.fillMaxSize()) {
+                com.example.pengeluaranku.view.component.List(navController = navController,incomeList, selectedMonth = currentMonth,viewModel = viewModel)
             }
         }
     }
@@ -125,6 +144,6 @@ fun TabsContent(pagerState: PagerState) {
 @Composable
 fun DashboardPreview() {
     PengeluarankuTheme {
-        Dashboard()
+//        Dashboard()
     }
 }

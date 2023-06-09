@@ -14,44 +14,40 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.pengeluaranku.database.Income
-import com.example.pengeluaranku.ui.theme.PengeluarankuTheme
 import com.example.pengeluaranku.view.component.LoadingDialog
 import com.example.pengeluaranku.view.component.ResultDialog
 import com.example.pengeluaranku.viewModel.MainViewModel
 import java.text.SimpleDateFormat
-import java.util.Calendar
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InputIncome(viewModel: MainViewModel, navController: NavController) {
+fun EditIncome(viewModel: MainViewModel, income: Income, navController: NavController) {
 
-    var textNominal by remember { mutableStateOf("0") }
+    var textNominal by remember { mutableStateOf("${income.income}") }
 
-    val mCalendar = Calendar.getInstance()
-    val selectedDate = remember { mutableStateOf(mCalendar.time) }
+    val date = SimpleDateFormat("dd/MMMM/yyyy").parse(income.date)
 
-    var textNote by remember { mutableStateOf("") }
+    val selectedDate = remember { mutableStateOf(date) }
+
+    var textNote by remember { mutableStateOf(income.notes) }
 
     val loadingDialog = remember { mutableStateOf(false) }
     val resultDialog = remember { mutableStateOf(false) }
 
     if (loadingDialog.value) {
-        LoadingDialog(onDismiss = {}, loadingWord = "Uploading")
+        LoadingDialog(onDismiss = {}, loadingWord = "Updating")
     }
 
     if (resultDialog.value) {
         ResultDialog(
             onDismiss = { navController.popBackStack() },
             resultString = "Success",
-            actionString = "Upload"
+            actionString = "Update"
         )
     }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -73,12 +69,11 @@ fun InputIncome(viewModel: MainViewModel, navController: NavController) {
             bgColor = Color(0xFF758BFD),
             Color.White,
             onClickButton = {
-                viewModel.insertIncome(
-                    Income(
-                        date = SimpleDateFormat("dd/MMMM/yyyy").format(selectedDate.value),
-                        income = textNominal.toInt(),
-                        notes = textNote
-                    )
+                viewModel.updateIncome(
+                    incomeId = income.id,
+                    date = SimpleDateFormat("dd/MMMM/yyyy").format(selectedDate.value),
+                    income = textNominal.toInt(),
+                    notes = textNote
                 )
                 loadingDialog.value = true
 
@@ -88,13 +83,5 @@ fun InputIncome(viewModel: MainViewModel, navController: NavController) {
                 }, 2000)
             }
         )
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_4, showSystemUi = true)
-@Composable
-fun InputIncomePreview() {
-    PengeluarankuTheme {
-//        InputIncome()
     }
 }

@@ -30,22 +30,61 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.pengeluaranku.database.Expense
 import com.example.pengeluaranku.ui.theme.PengeluarankuTheme
 import com.example.pengeluaranku.view.component.DropdownMenu
+import com.example.pengeluaranku.viewModel.MainViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ExpensePage(navController: NavController) {
+fun ExpensePage(
+    navController: NavController, expenseList: List<Expense>, viewModel: MainViewModel
+) {
+    val months = arrayOf(
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    )
+
+    val currentMonth = months.find { month ->
+        LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM")).toString() == month
+    }
+
+    val (selectedMonth, setSelectedMonth) = remember { mutableStateOf(currentMonth) }
+
     Column {
-        Header(Color(0xFFEF5A75), navController)
-        com.example.pengeluaranku.view.component.List()
+        Header(
+            Color(0xFFEF5A75),
+            navController,
+            months = months,
+            selectedMonth = selectedMonth,
+            onMonthSelected = setSelectedMonth
+        )
+        com.example.pengeluaranku.view.component.List(navController = navController,expenseList, selectedMonth = selectedMonth, viewModel = viewModel)
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Header(color: Color, navController: NavController) {
+fun Header(
+    color: Color,
+    navController: NavController,
+    months: Array<String>,
+    selectedMonth: String?,
+    onMonthSelected: (String) -> Unit
+) {
     var currentRoute by remember { mutableStateOf("") }
 
     DisposableEffect(navController) {
@@ -54,8 +93,7 @@ fun Header(color: Color, navController: NavController) {
                 if (it.isLowerCase()) it.titlecase(
                     Locale.getDefault()
                 ) else it.toString()
-            }
-                ?: ""
+            } ?: ""
         }
         navController.addOnDestinationChangedListener(observer)
 
@@ -67,9 +105,14 @@ fun Header(color: Color, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(0.dp, 80.dp, 10.dp, 0.dp), horizontalArrangement = Arrangement.SpaceBetween
+            .padding(0.dp, 80.dp, 10.dp, 0.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        DropdownMenu()
+        DropdownMenu(
+            months = months,
+            selectedMonth = selectedMonth!!,
+            onChangedText = onMonthSelected
+        )
         Button(
             onClick = {
                 if (currentRoute == "Expense") {
@@ -80,8 +123,7 @@ fun Header(color: Color, navController: NavController) {
                 .clip(RoundedCornerShape(25.dp))
                 .size(85.dp, 35.dp),
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = color,
-                contentColor = Color.White
+                backgroundColor = color, contentColor = Color.White
             )
         ) {
             Row {
@@ -99,6 +141,6 @@ fun Header(color: Color, navController: NavController) {
 fun ExpensePagePreview() {
     PengeluarankuTheme {
         val navController = rememberNavController()
-        ExpensePage(navController)
+//        ExpensePage(navController)
     }
 }

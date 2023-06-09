@@ -48,9 +48,9 @@ import java.util.Objects
 
 
 @Composable
-fun LoadingDialog(onDismiss: () -> Unit) {
+fun LoadingDialog(onDismiss: () -> Unit, loadingWord: String) {
     Dialog(
-        onDismissRequest = { onDismiss }, properties = DialogProperties(
+        onDismissRequest = { }, properties = DialogProperties(
             dismissOnBackPress = false, dismissOnClickOutside = false
         )
     ) {
@@ -64,7 +64,7 @@ fun LoadingDialog(onDismiss: () -> Unit) {
                     .padding(12.dp)
             ) {
                 Text(
-                    text = "Uploading Data...",
+                    text = "$loadingWord Data...",
                     Modifier
                         .padding(8.dp), textAlign = TextAlign.Center
                 )
@@ -81,9 +81,9 @@ fun LoadingDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-fun ResultDialog(onDismiss: () -> Unit, resultString: String) {
+fun ResultDialog(onDismiss: () -> Unit, resultString: String, actionString: String) {
     Dialog(
-        onDismissRequest = { onDismiss }, properties = DialogProperties(
+        onDismissRequest = { }, properties = DialogProperties(
             dismissOnBackPress = false, dismissOnClickOutside = false
         )
     ) {
@@ -97,7 +97,7 @@ fun ResultDialog(onDismiss: () -> Unit, resultString: String) {
                     .padding(12.dp)
             ) {
                 Text(
-                    text = "Send data $resultString...",
+                    text = "$actionString data $resultString...",
                     Modifier
                         .padding(8.dp),
                     textAlign = TextAlign.Center,
@@ -119,6 +119,64 @@ fun ResultDialog(onDismiss: () -> Unit, resultString: String) {
                     ),
                 ) {
                     Text(text = "Okay", letterSpacing = 1.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DeleteDialog(onDismiss: () -> Unit, onDelete: () -> Unit) {
+    Dialog(
+        onDismissRequest = { }, properties = DialogProperties(
+            dismissOnBackPress = false, dismissOnClickOutside = false
+        )
+    ) {
+        Card(
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.width(250.dp),
+        ) {
+            Column(
+                Modifier
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "Delete Data?",
+                    Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 20.sp,
+                    letterSpacing = 2.sp
+                )
+                Row {
+                    Button(
+                        onClick = {
+                            onDismiss()
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .width(100.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF758BFD),
+                            contentColor = Color.White
+                        ),
+                    ) {
+                        Text(text = "Back", letterSpacing = 1.sp)
+                    }
+                    Button(
+                        onClick = onDelete,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .width(100.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEF5A75),
+                            contentColor = Color.White
+                        ),
+                    ) {
+                        Text(text = "Yes", letterSpacing = 1.sp)
+                    }
                 }
             }
         }
@@ -253,8 +311,11 @@ fun CustomDialog(onDismiss: () -> Unit) {
     }
 
     if (showDialog) {
-        ResultDialog(onDismiss = { showDialog = false }, resultString = "Success")
-//    LoadingDialog {}
+        ResultDialog(
+            onDismiss = { showDialog = false },
+            actionString = "Send",
+            resultString = "Success"
+        )
     }
 
 }
@@ -274,21 +335,22 @@ fun Context.createImageFile(): File {
 @Composable
 fun CustomDialogPrev() {
     PengeluarankuTheme {
-//        var showCustomDialog by remember {
-//            mutableStateOf(true)
-//        }
-//
-//        if (showCustomDialog) {
-//            CustomDialog {
-//                showCustomDialog = !showCustomDialog
+        Column() {
+
+
+//            var showCustomDialog by remember {
+//                mutableStateOf(true)
 //            }
-//        }
+//
+//            if (showCustomDialog) {
+//                CustomDialog {
+//                    showCustomDialog = !showCustomDialog
+//                }
+//            }
 
-//        ResultDialog(onDismiss = { }, resultString = "Success")
-
-        LoadingDialog {
-
+//            ResultDialog(onDismiss = { }, actionString = "Delete", resultString = "Success")
+            DeleteDialog(onDismiss = {}, onDelete = {})
+//            LoadingDialog(onDismiss = {}, loadingWord = "Uploading")
         }
-
     }
 }

@@ -2,7 +2,11 @@ package com.example.pengeluaranku.view
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.widget.DatePicker
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,6 +24,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,7 +38,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -41,9 +45,14 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.pengeluaranku.database.Expense
 import com.example.pengeluaranku.ui.theme.PengeluarankuTheme
 import com.example.pengeluaranku.view.component.CustomDialog
 import com.example.pengeluaranku.view.component.DropdownInput
+import com.example.pengeluaranku.view.component.LoadingDialog
+import com.example.pengeluaranku.view.component.ResultDialog
+import com.example.pengeluaranku.viewModel.MainViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -51,8 +60,40 @@ import java.util.Date
 import java.util.Locale
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InputExpense() {
+fun InputExpense(viewModel: MainViewModel, navController: NavController) {
+    var textNominal by remember { mutableStateOf("0") }
+
+    val mCalendar = Calendar.getInstance()
+    val selectedDate = remember { mutableStateOf(mCalendar.time) }
+
+    var textNote by remember { mutableStateOf("") }
+
+    val types = arrayOf(
+        "Food and Beverages",
+        "Entertaiment",
+        "Clothing",
+        "Others"
+    )
+
+    var selectedDropdownText by remember { mutableStateOf(types[0]) }
+
+    val loadingDialog = remember { mutableStateOf(false) }
+    val resultDialog = remember { mutableStateOf(false) }
+
+    if (loadingDialog.value) {
+        LoadingDialog(onDismiss = {}, loadingWord = "Uploading")
+    }
+
+    if (resultDialog.value) {
+        ResultDialog(
+            onDismiss = { navController.popBackStack() },
+            resultString = "Success",
+            actionString = "Upload"
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,11 +106,40 @@ fun InputExpense() {
         ) {
             ButtonUseReceipt()
         }
-        NominalInput("Expense", Color.White)
-        DropdownInput()
-        InputDateTime(Color.White, Color.Black)
-        InputNotes(Color.White, Color.Black)
-        ButtonSubmit(Color.White, Color(0xFF758BFD))
+
+        NominalInput(
+            "Expense",
+            Color.White,
+            text = textNominal,
+            onChangedText = { if (it.length <= 11) textNominal = it })
+        DropdownInput(
+            types = types,
+            selectedText = selectedDropdownText,
+            onChangedText = { selectedDropdownText = it })
+        InputDateTime(Color.White, Color.Black, selectedDate = selectedDate)
+        InputNotes(Color.White, Color.Black, textNote = textNote, onChangedText = { textNote = it })
+
+        ButtonSubmit(
+            Color.White,
+            Color(0xFF758BFD),
+            onClickButton = {
+                viewModel
+                    .insertExpense(
+                        Expense(
+                            date = SimpleDateFormat("dd/MMMM/yyyy").format(selectedDate.value),
+                            expense = textNominal.toInt(),
+                            notes = textNote,
+                            type = selectedDropdownText
+                        )
+                    )
+                loadingDialog.value = true
+
+                Handler(Looper.getMainLooper()).postDelayed({
+                    loadingDialog.value = false
+                    resultDialog.value = true
+                }, 2000)
+            }
+        )
     }
 }
 
@@ -99,7 +169,12 @@ fun ButtonUseReceipt() {
 }
 
 @Composable
-fun NominalInput(textTitle: String, textColor: Color) {
+fun NominalInput(
+    textTitle: String,
+    textColor: Color,
+    text: String,
+    onChangedText: (String) -> Unit
+) {
     Column {
         Text(
             text = "$textTitle :",
@@ -108,7 +183,6 @@ fun NominalInput(textTitle: String, textColor: Color) {
             letterSpacing = 4.sp,
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
-            var text by remember { mutableStateOf(TextFieldValue("0")) }
             Text(
                 text = "Rp.",
                 fontSize = 36.sp,
@@ -118,7 +192,9 @@ fun NominalInput(textTitle: String, textColor: Color) {
             TextField(
                 value = text,
                 onValueChange = {
-                    if (it.text.length <= 11) text = it
+                    if (it.length <= 11) {
+                        onChangedText(it)
+                    }
                 },
                 singleLine = true,
                 colors = TextFieldDefaults.textFieldColors(
@@ -140,7 +216,11 @@ fun NominalInput(textTitle: String, textColor: Color) {
 
 @SuppressLint("SimpleDateFormat")
 @Composable
-fun InputDateTime(bgColor: Color, textColor: Color) {
+fun InputDateTime(
+    bgColor: Color,
+    textColor: Color,
+    selectedDate: MutableState<Date>,
+) {
 
     val mContext = LocalContext.current
 
@@ -150,7 +230,6 @@ fun InputDateTime(bgColor: Color, textColor: Color) {
 
     val mCalendar = Calendar.getInstance()
 
-    val selectedDate = remember { mutableStateOf(mCalendar.time) }
 
     mYear = mCalendar.get(Calendar.YEAR)
     mMonth = mCalendar.get(Calendar.MONTH)
@@ -203,10 +282,12 @@ fun InputDateTime(bgColor: Color, textColor: Color) {
 }
 
 @Composable
-fun InputNotes(bgColor: Color, textColor: Color) {
-
-    var text by remember { mutableStateOf("") }
-
+fun InputNotes(
+    bgColor: Color,
+    textColor: Color,
+    textNote: String,
+    onChangedText: (String) -> Unit
+) {
     Column {
         Text(
             text = "Notes :",
@@ -216,8 +297,8 @@ fun InputNotes(bgColor: Color, textColor: Color) {
             modifier = Modifier.padding(vertical = 20.dp)
         )
         TextField(
-            value = text,
-            onValueChange = { text = it },
+            value = textNote,
+            onValueChange = { onChangedText(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(15.dp)),
@@ -234,14 +315,20 @@ fun InputNotes(bgColor: Color, textColor: Color) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ButtonSubmit(bgColor: Color, textColor: Color) {
+fun ButtonSubmit(
+    bgColor: Color,
+    textColor: Color,
+    onClickButton: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize(), contentAlignment = Alignment.Center
     ) {
         Button(
-            onClick = { }, modifier = Modifier
+            onClick = onClickButton,
+            modifier = Modifier
                 .clip(RoundedCornerShape(40.dp))
                 .size(130.dp, 60.dp),
             colors = ButtonDefaults.buttonColors(
@@ -283,6 +370,6 @@ fun Long?.formatWithComma(): String =
 @Composable
 fun InputExpensePreview() {
     PengeluarankuTheme {
-        InputExpense()
+//        InputExpense()
     }
 }

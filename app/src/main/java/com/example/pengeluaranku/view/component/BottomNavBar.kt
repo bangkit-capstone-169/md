@@ -12,16 +12,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.pengeluaranku.R
+import com.example.pengeluaranku.database.Expense
+import com.example.pengeluaranku.database.Income
 import com.example.pengeluaranku.view.AboutPage
 import com.example.pengeluaranku.view.Dashboard
+import com.example.pengeluaranku.view.EditExpense
+import com.example.pengeluaranku.view.EditIncome
 import com.example.pengeluaranku.view.ExpensePage
 import com.example.pengeluaranku.view.IncomePage
 import com.example.pengeluaranku.view.InputExpense
 import com.example.pengeluaranku.view.InputIncome
+import com.example.pengeluaranku.viewModel.MainViewModel
 
 sealed class BottomNavItem(var title: String, var icon: Int, var screen_route: String) {
     object Dashboard : BottomNavItem("Dashboard", R.drawable.outline_home_24, "dashboard")
@@ -33,25 +37,49 @@ sealed class BottomNavItem(var title: String, var icon: Int, var screen_route: S
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavigationGraph(navController: NavHostController) {
+fun NavigationGraph(
+    navController: NavHostController,
+    expenseList: List<Expense>,
+    incomeList: List<Income>,
+    viewModel: MainViewModel
+) {
     NavHost(navController, startDestination = BottomNavItem.Dashboard.screen_route) {
         composable(BottomNavItem.Dashboard.screen_route) {
-            Dashboard()
+            Dashboard(
+                expenseList = expenseList,
+                incomeList = incomeList,
+                viewModel = viewModel,
+                navController = navController
+            )
         }
         composable(BottomNavItem.Expense.screen_route) {
-            ExpensePage(navController)
+            ExpensePage(navController, expenseList = expenseList, viewModel = viewModel)
         }
         composable(BottomNavItem.Income.screen_route) {
-            IncomePage(navController)
+            IncomePage(navController, incomeList = incomeList, viewModel = viewModel)
         }
         composable(BottomNavItem.About.screen_route) {
             AboutPage()
         }
-        composable("inputExpense"){
-            InputExpense()
+        composable("inputExpense") {
+            InputExpense(viewModel = viewModel, navController = navController)
         }
-        composable("inputIncome"){
-            InputIncome()
+        composable("inputIncome") {
+            InputIncome(viewModel = viewModel,navController = navController)
+        }
+        composable("editExpense/{expenseId}") { backStackEntry ->
+            val expenseId = backStackEntry.arguments?.getString("expenseId")
+            val dataExpense = expenseList.find { it.id == expenseId?.toInt() }
+            EditExpense(viewModel = viewModel, expense = dataExpense!!, navController = navController)
+        }
+        composable("editIncome/{incomeId}") { backStackEntry ->
+            val incomeId = backStackEntry.arguments?.getString("incomeId")
+            val dataExpense = incomeList.find { it.id == incomeId?.toInt() }
+            EditIncome(
+                viewModel = viewModel,
+                income = dataExpense!!,
+                navController = navController
+            )
         }
 
     }

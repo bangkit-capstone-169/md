@@ -31,32 +31,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DropdownMenu() {
-    val months = arrayOf(
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
-    )
+fun DropdownMenu(months: Array<String>,selectedMonth: String, onChangedText: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val currentMonth = months.find { month ->
-        LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM")).toString() == month
-    }
-    var selectedText by remember { mutableStateOf(currentMonth) }
 
     Box {
         ExposedDropdownMenuBox(
@@ -66,9 +46,9 @@ fun DropdownMenu() {
             },
         ) {
             TextField(
-                value = selectedText!!,
+                value = selectedMonth!!,
                 onValueChange = {
-                    selectedText = it
+                    onChangedText(it)
                 },
                 readOnly = true,
                 trailingIcon = {
@@ -99,7 +79,8 @@ fun DropdownMenu() {
                 months.forEach { item ->
                     DropdownMenuItem(
                         onClick = {
-                            selectedText = item
+                            onChangedText(item)
+//                            selectedText = item
                             expanded = false
                         }
                     ) {
@@ -116,17 +97,8 @@ fun DropdownMenu() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun DropdownInput() {
-    val types = arrayOf(
-        "Food and Beverages",
-        "Entertaiment",
-        "Clothing",
-        "Others"
-    )
-
+fun DropdownInput(types:Array<String>,selectedText: String, onChangedText: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-
-    var selectedText by remember { mutableStateOf(types[0]) }
 
     Box {
         Column {
@@ -140,7 +112,7 @@ fun DropdownInput() {
                 TextField(
                     value = selectedText,
                     onValueChange = {
-                        selectedText = it
+                        onChangedText
                     },
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -164,7 +136,7 @@ fun DropdownInput() {
                     types.forEach { item ->
                         DropdownMenuItem(
                             onClick = {
-                                selectedText = item
+                                onChangedText(item)
                                 expanded = false
                             }
                         ) {
